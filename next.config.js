@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  webpack(config) {
+  serverExternalPackages: [
+    "@opentelemetry/sdk-node",
+    "@opentelemetry/auto-instrumentations-node",
+    "@opentelemetry/exporter-trace-otlp-http",
+    "@opentelemetry/resources",
+  ],
+  webpack(config, { isServer }) {
     const fileLoaderRule = config.module.rules.find((rule) =>
       rule.test?.test?.(".svg")
     )
@@ -18,6 +24,19 @@ const nextConfig = {
     config.experiments = {
       ...config.experiments,
       asyncWebAssembly: true,
+    }
+
+    // Exclude OpenTelemetry from client bundle
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        dns: false,
+        child_process: false,
+        stream: false,
+      }
     }
 
     return config
