@@ -4,7 +4,7 @@ import { PaginationState } from "@tanstack/react-table"
 
 import { fetchBlockData } from "../blocks"
 import { logger } from "../logger"
-import { blockRpcDuration, blocksProcessed } from "../metrics"
+import { blockRpcDuration, blocksProcessed } from "../otel-metrics"
 import { isUndefined } from "../utils"
 
 import { db } from "@/db"

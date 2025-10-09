@@ -9,7 +9,7 @@ import { db } from "@/db"
 import { proofs } from "@/db/schema"
 import { findOrCreateBlock } from "@/lib/api/blocks"
 import { logger, traced } from "@/lib/logger"
-import { proofSubmissions } from "@/lib/metrics"
+import { proofSubmissions } from "@/lib/otel-metrics"
 import { withAuth } from "@/lib/middleware/with-auth"
 import { queuedProofSchema } from "@/lib/zod/schemas/proof"
 

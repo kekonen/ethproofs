@@ -1,7 +1,7 @@
 import { headers } from "next/headers"
 
 import { hashToken } from "../auth/hash-token"
-import { authFailures } from "../metrics"
+import { authFailures } from "../otel-metrics"
 
 import { withTelemetry } from "./with-telemetry"
 

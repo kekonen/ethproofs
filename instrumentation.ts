@@ -25,6 +25,10 @@ export async function register() {
       BatchLogRecordProcessor,
     } = await import("@opentelemetry/sdk-logs")
     const { logs } = await import("@opentelemetry/api-logs")
+    const { resourceFromAttributes } = await import("@opentelemetry/resources")
+    const { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } = await import(
+      "@opentelemetry/semantic-conventions"
+    )
 
     const serviceName = process.env.OTEL_SERVICE_NAME || "ethproofs-api"
     const serviceVersion = process.env.npm_package_version || "0.2.0"
@@ -42,8 +46,15 @@ export async function register() {
       ? JSON.parse(process.env.OTEL_EXPORTER_OTLP_HEADERS)
       : {}
 
-    // Initialize Logs Provider
+    // Create shared resource with service information
+    const resource = resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: serviceName,
+      [ATTR_SERVICE_VERSION]: serviceVersion,
+    })
+
+    // Initialize Logs Provider with resource
     const loggerProvider = new LoggerProvider({
+      resource,
       processors: [
         new BatchLogRecordProcessor(
           new OTLPLogExporter({

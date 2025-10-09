@@ -1,5 +1,5 @@
 import { logger } from "../logger"
-import { proofUploadDuration } from "../metrics"
+import { proofUploadDuration } from "../otel-metrics"
 
 import { PROOF_BINARY_BUCKET } from "@/lib/constants"
 

@@ -26,20 +26,30 @@ The application now exports **three signals** via OTLP gRPC:
 
 ### Logs
 - Emitted via OpenTelemetry Logs API using `logger.info()`, `logger.error()`, etc.
-- Sent directly via OTLP gRPC to port 4317 (same as traces and metrics)
+- Sent via OTLP gRPC to port 4317 (same as traces and metrics)
 - Batched and exported automatically by `BatchLogRecordProcessor`
 - Include `trace_id` and `span_id` for automatic correlation with traces
 - Also written to console for local development visibility
 - Automatically correlated with traces in DataDog - click a log to see its trace, and vice versa
 
+**Note:** OTLP logs support requires dd-agent 7.48.0+ with `DD_OTLP_CONFIG_LOGS_ENABLED=true` environment variable.
+
 ## Configuration
 
-No changes needed from trace-only setup:
-
 ```bash
-# .env.local
+# .env or .env.local
+
+# OTLP endpoint for traces, metrics, and logs
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 OTEL_EXPORTER_OTLP_HEADERS={}
+```
+
+**dd-agent Docker Configuration:**
+```yaml
+environment:
+  - DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT=0.0.0.0:4317
+  - DD_OTLP_CONFIG_LOGS_ENABLED=true  # Required for logs!
+  - DD_LOGS_ENABLED=true
 ```
 
 ## What You'll See in DataDog
@@ -105,7 +115,7 @@ Alert when: error_rate > 0.05 (5%)
 
 ## Custom Business Metrics
 
-The application now tracks custom business metrics defined in `lib/metrics.ts`:
+The application now tracks custom business metrics defined in `lib/otel-metrics.ts`:
 
 ### Business Metrics
 

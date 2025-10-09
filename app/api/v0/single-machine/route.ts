@@ -9,7 +9,7 @@ import {
 } from "@/db/schema"
 import { getZkvmVersion } from "@/lib/api/zkvm-versions"
 import { logger, traced } from "@/lib/logger"
-import { clusterRegistrations } from "@/lib/metrics"
+import { clusterRegistrations } from "@/lib/otel-metrics"
 import { withAuth } from "@/lib/middleware/with-auth"
 import { singleMachineSchema } from "@/lib/zod/schemas/cluster"
 

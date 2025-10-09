@@ -15,7 +15,7 @@ import {
   proofSubmissions,
   proofSize,
   storageQuotaExceeded as storageQuotaExceededMetric,
-} from "@/lib/metrics"
+} from "@/lib/otel-metrics"
 import { withAuth } from "@/lib/middleware/with-auth"
 import { provedProofSchema } from "@/lib/zod/schemas/proof"
 

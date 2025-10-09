@@ -130,8 +130,10 @@ class Logger {
   }
 }
 
+const serviceName = process.env.OTEL_SERVICE_NAME || "ethproofs-api"
+
 // Export singleton instance
-export const logger = new Logger()
+export const logger = new Logger(serviceName)
 
 // Helper function to create traced operations
 export async function traced<T>(
