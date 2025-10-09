@@ -9,6 +9,7 @@ import {
 } from "@/db/schema"
 import { getZkvmVersion } from "@/lib/api/zkvm-versions"
 import { logger, traced } from "@/lib/logger"
+import { clusterRegistrations } from "@/lib/metrics"
 import { withAuth } from "@/lib/middleware/with-auth"
 import { singleMachineSchema } from "@/lib/zod/schemas/cluster"
 
@@ -126,6 +127,12 @@ export const POST = withAuth(async ({ request, user }) => {
 
       log.info("Single machine registered successfully", {
         cluster_id: clusterIndex,
+      })
+
+      // Record cluster registration metric
+      clusterRegistrations.add(1, {
+        team_id: user.id,
+        is_multi_machine: "false",
       })
 
       return Response.json({ id: clusterIndex })

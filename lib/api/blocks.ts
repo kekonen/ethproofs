@@ -4,6 +4,7 @@ import { PaginationState } from "@tanstack/react-table"
 
 import { fetchBlockData } from "../blocks"
 import { logger } from "../logger"
+import { blockRpcDuration, blocksProcessed } from "../metrics"
 import { isUndefined } from "../utils"
 
 import { db } from "@/db"
@@ -32,6 +33,9 @@ export const findOrCreateBlock = async (blockNumber: number) => {
         })
         .returning({ block_number: blocks.block_number })
 
+      // Record block creation metric
+      blocksProcessed.add(1, { operation: "created" })
+
       return block.block_number
     } catch (error) {
       logger.error("Failed to create block", error, { block_number: blockNumber })
@@ -44,13 +48,29 @@ export const findOrCreateBlock = async (blockNumber: number) => {
 
 export const updateBlock = async (blockNumber: number) => {
   logger.debug("Fetching block data from RPC", { block_number: blockNumber })
+
+  const startTime = Date.now()
   let blockData
+  let rpcSuccess = true
+
   try {
     blockData = await fetchBlockData(blockNumber)
   } catch (error) {
+    rpcSuccess = false
+    const duration = Date.now() - startTime
+    blockRpcDuration.record(duration, {
+      rpc: "primary",
+      success: "false",
+    })
     logger.error("RPC error fetching block data", error, { block_number: blockNumber })
     throw new Error(`[RPC] Upstream error: ${error}`)
   }
+
+  const rpcDuration = Date.now() - startTime
+  blockRpcDuration.record(rpcDuration, {
+    rpc: "primary",
+    success: "true",
+  })
 
   logger.debug("Updating block in database", { block_number: blockNumber })
 
@@ -71,6 +91,9 @@ export const updateBlock = async (blockNumber: number) => {
         set: { ...dataToInsert },
       })
       .returning({ block_number: blocks.block_number })
+
+    // Record block update metric
+    blocksProcessed.add(1, { operation: "updated" })
 
     return block.block_number
   } catch (error) {

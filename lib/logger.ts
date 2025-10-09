@@ -67,7 +67,10 @@ class Logger {
         severityNumber: severityMap[level],
         severityText: level.toUpperCase(),
         body: message,
-        attributes: logContext as Record<string, string | number | boolean | (string | number | boolean)[]>,
+        attributes: {
+          ...logContext,
+          service: this.serviceName,
+        } as Record<string, string | number | boolean | (string | number | boolean)[]>,
       })
     }
 

@@ -11,6 +11,11 @@ import { uploadProofBinary } from "@/lib/api/proof-binaries"
 import { isStorageQuotaExceeded } from "@/lib/api/storage"
 import { getTeam } from "@/lib/api/teams"
 import { logger, traced } from "@/lib/logger"
+import {
+  proofSubmissions,
+  proofSize,
+  storageQuotaExceeded as storageQuotaExceededMetric,
+} from "@/lib/metrics"
 import { withAuth } from "@/lib/middleware/with-auth"
 import { provedProofSchema } from "@/lib/zod/schemas/proof"
 
@@ -122,6 +127,12 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
 
       const binaryBuffer = Buffer.from(proof, "base64")
 
+      // Record proof size metric
+      proofSize.record(binaryBuffer.byteLength, {
+        team_id: teamId,
+        status: "proved",
+      })
+
       // TODO:TEAM - revisit the need for storage quota
       const storageQuotaExceeded = await isStorageQuotaExceeded(
         teamId,
@@ -132,6 +143,7 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
         log.warn("Storage quota exceeded", {
           proof_size: binaryBuffer.byteLength,
         })
+        storageQuotaExceededMetric.add(1, { team_id: teamId })
       }
 
       const dataToInsert = {
@@ -190,6 +202,12 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
         log.info("Proof stored successfully", {
           proof_id: newProof.proof_id,
           cluster_uuid: cluster.id,
+        })
+
+        // Record successful proof submission
+        proofSubmissions.add(1, {
+          status: "proved",
+          team_id: teamId,
         })
 
         return Response.json(newProof)

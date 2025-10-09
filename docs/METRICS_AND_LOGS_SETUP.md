@@ -103,23 +103,82 @@ Alert when: error_rate > 0.05 (5%)
 | **Logs** | Searching for specific events | "Find all storage quota warnings for team X" |
 | **Metrics** | Aggregated monitoring | "Is P95 latency increasing?" |
 
-## Custom Metrics (Future)
+## Custom Business Metrics
 
-You can add custom metrics later:
+The application now tracks custom business metrics defined in `lib/metrics.ts`:
 
-```typescript
-import { metrics } from "@opentelemetry/api"
+### Business Metrics
 
-const meter = metrics.getMeter("ethproofs")
-const proofCounter = meter.createCounter("proofs.submitted", {
-  description: "Number of proofs submitted",
-})
+**`proofs.submitted`** (Counter)
+- Tracks proof submissions by status
+- Labels: `status` (queued, proving, proved), `team_id`
+- Instrumented in: `/api/v0/proofs/{queued,proving,proved}/route.ts`
 
-// In your handler
-proofCounter.add(1, { team_id: teamId, status: "proved" })
+**`proofs.size_bytes`** (Histogram)
+- Distribution of proof binary sizes
+- Labels: `team_id`, `status`
+- Instrumented in: `/api/v0/proofs/proved/route.ts`
+
+**`blocks.processed`** (Counter)
+- Blocks created or updated
+- Labels: `operation` (created, updated)
+- Instrumented in: `lib/api/blocks.ts`
+
+**`storage.quota_exceeded`** (Counter)
+- Number of storage quota violations
+- Labels: `team_id`
+- Instrumented in: `/api/v0/proofs/proved/route.ts`
+
+**`clusters.registered`** (Counter)
+- Cluster registrations
+- Labels: `team_id`, `is_multi_machine` (true, false)
+- Instrumented in: `/api/v0/single-machine/route.ts`
+
+### Performance Metrics
+
+**`blocks.rpc_fetch_duration`** (Histogram)
+- Duration of RPC calls to fetch block data
+- Labels: `rpc` (primary, fallback), `success` (true, false)
+- Instrumented in: `lib/api/blocks.ts`
+
+**`proofs.upload_duration`** (Histogram)
+- Time to upload proof binaries to storage
+- Labels: `success` (true, false)
+- Instrumented in: `lib/api/proof-binaries.ts`
+
+**`auth.failures`** (Counter)
+- Authentication failures
+- No labels (security - don't expose team_id)
+- Instrumented in: `lib/middleware/with-auth.ts`
+
+**`database.errors`** (Counter)
+- Database operation errors
+- Labels: `operation`, `table`
+- Available for future use
+
+### Using Custom Metrics in DataDog
+
+Example queries:
+
+**Proof submission rate by status:**
+```
+sum:proofs.submitted{*} by {status}.as_rate()
 ```
 
-This will automatically export to DataDog via the configured OTLP exporter.
+**P95 proof size:**
+```
+p95:proofs.size_bytes{*}
+```
+
+**RPC latency by success/failure:**
+```
+avg:blocks.rpc_fetch_duration{*} by {success}
+```
+
+**Storage upload failures:**
+```
+sum:proofs.upload_duration{success:false}.as_count()
+```
 
 ## Troubleshooting
 

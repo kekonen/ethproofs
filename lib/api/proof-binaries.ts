@@ -1,4 +1,5 @@
 import { logger } from "../logger"
+import { proofUploadDuration } from "../metrics"
 
 import { PROOF_BINARY_BUCKET } from "@/lib/constants"
 
@@ -10,6 +11,8 @@ export const uploadProofBinary = async (
 ) => {
   const supabase = await createClient()
 
+  const startTime = Date.now()
+
   const { data, error } = await supabase.storage
     .from(PROOF_BINARY_BUCKET)
     .upload(filename, binaryBuffer, {
@@ -17,7 +20,10 @@ export const uploadProofBinary = async (
       upsert: true,
     })
 
+  const duration = Date.now() - startTime
+
   if (error) {
+    proofUploadDuration.record(duration, { success: "false" })
     logger.error("Failed to upload proof binary", error, {
       filename,
       size_bytes: binaryBuffer.byteLength,
@@ -25,6 +31,7 @@ export const uploadProofBinary = async (
     throw error
   }
 
+  proofUploadDuration.record(duration, { success: "true" })
   logger.debug("Proof binary uploaded", {
     filename,
     size_bytes: binaryBuffer.byteLength,

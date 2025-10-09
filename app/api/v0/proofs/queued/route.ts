@@ -9,6 +9,7 @@ import { db } from "@/db"
 import { proofs } from "@/db/schema"
 import { findOrCreateBlock } from "@/lib/api/blocks"
 import { logger, traced } from "@/lib/logger"
+import { proofSubmissions } from "@/lib/metrics"
 import { withAuth } from "@/lib/middleware/with-auth"
 import { queuedProofSchema } from "@/lib/zod/schemas/proof"
 
@@ -112,6 +113,12 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
 
         log.info("Queued proof stored successfully", {
           proof_id: proof.proof_id,
+        })
+
+        // Record proof submission metric
+        proofSubmissions.add(1, {
+          status: "queued",
+          team_id: teamId,
         })
 
         return Response.json(proof)
