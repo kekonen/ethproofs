@@ -129,7 +129,6 @@ export const POST = withAuth(async ({ request, user }) => {
         cluster_id: clusterIndex,
       })
 
-      // Record cluster registration metric
       clusterRegistrations.add(1, {
         team_id: user.id,
         is_multi_machine: "false",

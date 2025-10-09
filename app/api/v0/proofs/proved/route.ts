@@ -127,13 +127,11 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
 
       const binaryBuffer = Buffer.from(proof, "base64")
 
-      // Record proof size metric
       proofSize.record(binaryBuffer.byteLength, {
         team_id: teamId,
         status: "proved",
       })
 
-      // TODO:TEAM - revisit the need for storage quota
       const storageQuotaExceeded = await isStorageQuotaExceeded(
         teamId,
         binaryBuffer.byteLength
@@ -204,7 +202,6 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
           cluster_uuid: cluster.id,
         })
 
-        // Record successful proof submission
         proofSubmissions.add(1, {
           status: "proved",
           team_id: teamId,

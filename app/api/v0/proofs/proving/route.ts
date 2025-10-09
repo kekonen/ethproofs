@@ -16,7 +16,7 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
   const payload = await request.json()
   const teamId = user.id
 
-  let proofPayload: ReturnType<typeof provingProofSchema.parse>
+  let proofPayload
   try {
     proofPayload = provingProofSchema.parse(payload)
   } catch (error) {
@@ -114,7 +114,6 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
           proof_id: proof.proof_id,
         })
 
-        // Record proof submission metric
         proofSubmissions.add(1, {
           status: "proving",
           team_id: teamId,

@@ -33,7 +33,6 @@ export const findOrCreateBlock = async (blockNumber: number) => {
         })
         .returning({ block_number: blocks.block_number })
 
-      // Record block creation metric
       blocksProcessed.add(1, { operation: "created" })
 
       return block.block_number
@@ -92,7 +91,6 @@ export const updateBlock = async (blockNumber: number) => {
       })
       .returning({ block_number: blocks.block_number })
 
-    // Record block update metric
     blocksProcessed.add(1, { operation: "updated" })
 
     return block.block_number

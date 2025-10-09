@@ -64,29 +64,17 @@ pnpm seed:sync
 
 ## Monitoring & Observability
 
-The backend is instrumented with OpenTelemetry for distributed tracing and structured logging. This helps track proof submissions, machine registrations, and other critical operations.
-
-### Quick Start
+The backend is instrumented with OpenTelemetry for distributed tracing, metrics, and structured logging.
 
 Tracing is disabled by default. To enable it, set the OTLP endpoint in your `.env` file:
 
 ```bash
-# DataDog (recommended)
-OTEL_EXPORTER_OTLP_ENDPOINT=https://api.datadoghq.com/v1/traces
-OTEL_EXPORTER_OTLP_HEADERS={"dd-api-key":"your-key"}
+# DataDog example
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+OTEL_EXPORTER_OTLP_HEADERS={}
 
 # Or use Honeycomb, Axiom, Grafana Cloud, etc.
-# See docs/OPENTELEMETRY.md for more options
 ```
-
-### Why monitor?
-
-- Track proof submission errors and latency
-- Get alerts when something breaks (similar to current Telegram alerts)
-- Build dashboards to understand system behavior
-- Debug issues faster with full request traces
-
-See [`docs/OPENTELEMETRY.md`](./docs/OPENTELEMETRY.md) for full setup instructions and [`docs/DATADOG_MONITORING_SETUP.md`](./docs/DATADOG_MONITORING_SETUP.md) for production monitoring configuration.
 
 ## Cron jobs
 
