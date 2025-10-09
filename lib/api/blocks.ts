@@ -3,6 +3,7 @@ import { unstable_cache as cache } from "next/cache"
 import { PaginationState } from "@tanstack/react-table"
 
 import { fetchBlockData } from "../blocks"
+import { logger } from "../logger"
 import { isUndefined } from "../utils"
 
 import { db } from "@/db"
@@ -19,7 +20,7 @@ export const findOrCreateBlock = async (blockNumber: number) => {
   })
 
   if (isUndefined(foundBlock)) {
-    console.log("Creating block:", blockNumber)
+    logger.info("Creating new block", { block_number: blockNumber })
 
     try {
       const [block] = await db
@@ -33,6 +34,7 @@ export const findOrCreateBlock = async (blockNumber: number) => {
 
       return block.block_number
     } catch (error) {
+      logger.error("Failed to create block", error, { block_number: blockNumber })
       throw new Error(`[DB] Error creating block: ${error}`)
     }
   }
@@ -41,15 +43,16 @@ export const findOrCreateBlock = async (blockNumber: number) => {
 }
 
 export const updateBlock = async (blockNumber: number) => {
-  console.log("Fetching block data:", blockNumber)
+  logger.debug("Fetching block data from RPC", { block_number: blockNumber })
   let blockData
   try {
     blockData = await fetchBlockData(blockNumber)
   } catch (error) {
+    logger.error("RPC error fetching block data", error, { block_number: blockNumber })
     throw new Error(`[RPC] Upstream error: ${error}`)
   }
 
-  console.log("Updating block:", blockNumber)
+  logger.debug("Updating block in database", { block_number: blockNumber })
 
   const dataToInsert = {
     block_number: blockNumber,
