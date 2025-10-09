@@ -78,7 +78,7 @@ export const POST = withAuth(async ({ request, user }) => {
 ### Phase 2: Validate (Do This Next)
 1. **Enable OpenTelemetry** in production:
    ```bash
-   OTEL_ENABLED=true
+   OTEL_EXPORTER_OTLP_ENDPOINT=https://api.datadoghq.com/v1/traces
    OTEL_EXPORTER_OTLP_ENDPOINT=https://api.honeycomb.io/v1/traces
    OTEL_EXPORTER_OTLP_HEADERS={"x-honeycomb-team":"YOUR_API_KEY"}
    ```

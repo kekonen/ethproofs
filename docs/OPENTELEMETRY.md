@@ -18,53 +18,62 @@ This application uses OpenTelemetry for distributed tracing and structured loggi
 Add these to your `.env` file:
 
 ```bash
-# Enable OpenTelemetry (required)
-OTEL_ENABLED=true
-
 # Service name (optional, default: ethproofs-api)
 OTEL_SERVICE_NAME=ethproofs-api
 
-# OTLP endpoint - where to send traces
+# OTLP endpoint - where to send traces (leave empty to disable)
 OTEL_EXPORTER_OTLP_ENDPOINT=https://api.honeycomb.io/v1/traces
 
 # Headers for authentication (as JSON string)
 OTEL_EXPORTER_OTLP_HEADERS={"x-honeycomb-team":"your-api-key"}
 ```
 
+**Note:** OpenTelemetry is automatically enabled when `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Leave it empty to disable tracing.
+
 ### Supported Monitoring Services
 
-#### 1. **Honeycomb** (Recommended for developers)
+#### 1. **DataDog** (Recommended for production)
 ```bash
-OTEL_ENABLED=true
+OTEL_EXPORTER_OTLP_ENDPOINT=https://api.datadoghq.com/v1/traces
+OTEL_EXPORTER_OTLP_HEADERS={"dd-api-key":"YOUR_DATADOG_API_KEY"}
+```
+- Sign up: https://datadoghq.com
+- Full APM, logs, metrics, and alerting
+
+#### 2. **Honeycomb** (Recommended for developers)
+```bash
 OTEL_EXPORTER_OTLP_ENDPOINT=https://api.honeycomb.io/v1/traces
 OTEL_EXPORTER_OTLP_HEADERS={"x-honeycomb-team":"YOUR_API_KEY"}
 ```
 - Sign up: https://honeycomb.io
 - Great UX, generous free tier
 
-#### 2. **Axiom**
+#### 3. **Axiom**
 ```bash
-OTEL_ENABLED=true
 OTEL_EXPORTER_OTLP_ENDPOINT=https://api.axiom.co/v1/traces
 OTEL_EXPORTER_OTLP_HEADERS={"Authorization":"Bearer YOUR_AXIOM_TOKEN","X-Axiom-Dataset":"YOUR_DATASET"}
 ```
 - Sign up: https://axiom.co
 - Logs + traces in one platform
 
-#### 3. **Grafana Cloud**
+#### 4. **Grafana Cloud**
 ```bash
-OTEL_ENABLED=true
 OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-us-central-0.grafana.net/otlp/v1/traces
 OTEL_EXPORTER_OTLP_HEADERS={"Authorization":"Basic BASE64_ENCODED_CREDENTIALS"}
 ```
 - Sign up: https://grafana.com/products/cloud/
 - Full observability stack
 
-#### 4. **Local Development** (OpenTelemetry Collector)
+#### 5. **Local Development** (OpenTelemetry Collector)
 ```bash
-OTEL_ENABLED=true
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
 OTEL_EXPORTER_OTLP_HEADERS={}
+```
+
+#### 6. **Disabled** (No tracing)
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=
+# or simply omit the variable
 ```
 
 ## Architecture

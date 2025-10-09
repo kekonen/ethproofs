@@ -13,16 +13,12 @@ export async function register() {
 
     const serviceName = process.env.OTEL_SERVICE_NAME || "ethproofs-api"
     const serviceVersion = process.env.npm_package_version || "0.2.0"
-    const otlpEndpoint =
-      process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
-      "http://localhost:4318/v1/traces"
+    const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
 
-    // Only initialize if OpenTelemetry is enabled
-    const isEnabled = process.env.OTEL_ENABLED === "true"
-
-    if (!isEnabled) {
+    // Only initialize if OTLP endpoint is configured
+    if (!otlpEndpoint) {
       console.log(
-        "[OpenTelemetry] Disabled. Set OTEL_ENABLED=true to enable tracing."
+        "[OpenTelemetry] Disabled. Set OTEL_EXPORTER_OTLP_ENDPOINT to enable tracing."
       )
       return
     }

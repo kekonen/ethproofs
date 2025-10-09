@@ -72,7 +72,7 @@
 
 **Required Variables:**
 ```bash
-OTEL_ENABLED=true  # Enable/disable tracing
+OTEL_EXPORTER_OTLP_ENDPOINT=https://api.datadoghq.com/v1/traces  # Enable/disable tracing
 OTEL_SERVICE_NAME=ethproofs-api  # Service identifier
 OTEL_EXPORTER_OTLP_ENDPOINT=https://api.honeycomb.io/v1/traces
 OTEL_EXPORTER_OTLP_HEADERS={"x-honeycomb-team":"YOUR_API_KEY"}
@@ -137,7 +137,7 @@ GROUP BY team_id, message
 
 2. **Set environment variables in your deployment:**
    ```bash
-   OTEL_ENABLED=true
+   OTEL_EXPORTER_OTLP_ENDPOINT=https://api.datadoghq.com/v1/traces
    OTEL_SERVICE_NAME=ethproofs-api
    OTEL_EXPORTER_OTLP_ENDPOINT=<your-endpoint>
    OTEL_EXPORTER_OTLP_HEADERS=<your-auth-headers-as-json>
