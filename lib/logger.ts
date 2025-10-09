@@ -1,4 +1,4 @@
-import { context,SpanStatusCode, trace } from "@opentelemetry/api"
+import { context, SpanStatusCode, trace } from "@opentelemetry/api"
 
 type LogLevel = "debug" | "info" | "warn" | "error"
 
@@ -30,20 +30,22 @@ class Logger {
     const timestamp = new Date().toISOString()
     const traceContext = this.getTraceContext()
 
+    const logContext = {
+      ...this.baseContext,
+      ...(ctx || {}),
+    }
+
     const logEntry = {
       timestamp,
       level,
       service: this.serviceName,
       message,
       ...traceContext,
-      ...this.baseContext,
-      ...(ctx || {}),
+      ...logContext,
     }
 
-    // Format for structured logging
+    // Output to console (logs will be collected by dd-agent or sent via separate log exporter)
     const logString = JSON.stringify(logEntry)
-
-    // Output to appropriate stream
     if (level === "error") {
       console.error(logString)
     } else if (level === "warn") {
