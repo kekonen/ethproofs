@@ -8,9 +8,11 @@ interface LogContext {
 
 class Logger {
   private serviceName: string
+  private baseContext: LogContext
 
-  constructor(serviceName: string = "ethproofs") {
+  constructor(serviceName: string = "ethproofs", baseContext: LogContext = {}) {
     this.serviceName = serviceName
+    this.baseContext = baseContext
   }
 
   private getTraceContext() {
@@ -34,6 +36,7 @@ class Logger {
       service: this.serviceName,
       message,
       ...traceContext,
+      ...this.baseContext,
       ...(ctx || {}),
     }
 
@@ -83,6 +86,15 @@ class Logger {
       span.recordException(error)
       span.setStatus({ code: SpanStatusCode.ERROR, message: error.message })
     }
+  }
+
+  /**
+   * Create a child logger with additional context that will be included in all log entries
+   * @param ctx - Context to include in all logs from this child logger
+   * @returns A new Logger instance with merged context
+   */
+  child(ctx: LogContext): Logger {
+    return new Logger(this.serviceName, { ...this.baseContext, ...ctx })
   }
 }
 

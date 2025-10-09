@@ -38,13 +38,12 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
   const { block_number, cluster_id, verifier_id, proof, ...restProofPayload } =
     proofPayload
 
+  const log = logger.child({ team_id: teamId, block_number, cluster_id })
+
   return traced(
     "POST /api/v0/proofs/proved",
     async () => {
-      logger.info("Processing proved proof submission", {
-        team_id: teamId,
-        block_number,
-        cluster_id,
+      log.info("Processing proved proof submission", {
         proof_size: proof.length,
       })
 
@@ -58,10 +57,7 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
       })
 
       if (!cluster) {
-        logger.error("Cluster not found", undefined, {
-          cluster_id,
-          team_id: teamId,
-        })
+        log.error("Cluster not found")
         return new Response("Cluster not found", { status: 404 })
       }
 
@@ -80,24 +76,17 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
       })
 
       if (!clusterVersion) {
-        logger.error("Cluster version not found", undefined, {
-          cluster_id,
-          team_id: teamId,
-        })
+        log.error("Cluster version not found")
         return new Response("Cluster version not found", { status: 404 })
       }
 
       try {
         const block = await updateBlock(block_number)
-        logger.info("Block updated successfully", {
+        log.info("Block updated successfully", {
           block_number: block,
-          team_id: teamId,
         })
       } catch (error) {
-        logger.error("Failed to update block", error, {
-          block_number,
-          team_id: teamId,
-        })
+        log.error("Failed to update block", error)
         return new Response("Internal server error", {
           status: 500,
         })
@@ -140,8 +129,7 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
       )
 
       if (storageQuotaExceeded) {
-        logger.warn("Storage quota exceeded", {
-          team_id: teamId,
+        log.warn("Storage quota exceeded", {
           proof_size: binaryBuffer.byteLength,
         })
       }
@@ -199,19 +187,14 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
         revalidateTag(`cluster-${cluster.id}`)
         revalidateTag(`block-${block_number}`)
 
-        logger.info("Proof stored successfully", {
+        log.info("Proof stored successfully", {
           proof_id: newProof.proof_id,
-          block_number,
-          team_id: teamId,
-          cluster_id: cluster.id,
+          cluster_uuid: cluster.id,
         })
 
         return Response.json(newProof)
       } catch (error) {
-        logger.error("Failed to store proof", error, {
-          block_number,
-          team_id: teamId,
-        })
+        log.error("Failed to store proof", error)
         return new Response("Internal server error", {
           status: 500,
         })

@@ -21,6 +21,12 @@ export async function GET(request: NextRequest) {
     return new Response("Invalid machine type", { status: 400 })
   }
 
+  const log = logger.child({
+    page_index: pageIndex,
+    page_size: pageSize,
+    machine_type: machineType,
+  })
+
   try {
     const blocks = await fetchBlocksPaginated(
       {
@@ -32,11 +38,7 @@ export async function GET(request: NextRequest) {
 
     return Response.json(blocks)
   } catch (error) {
-    logger.error("Failed to fetch blocks", error, {
-      page_index: pageIndex,
-      page_size: pageSize,
-      machine_type: machineType,
-    })
+    log.error("Failed to fetch blocks", error)
     return new Response("Internal server error", { status: 500 })
   }
 }

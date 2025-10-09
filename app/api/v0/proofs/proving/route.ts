@@ -33,14 +33,12 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
 
   const { block_number, cluster_id } = proofPayload
 
+  const log = logger.child({ team_id: teamId, block_number, cluster_id })
+
   return traced(
     "POST /api/v0/proofs/proving",
     async () => {
-      logger.info("Processing proving proof submission", {
-        team_id: teamId,
-        block_number,
-        cluster_id,
-      })
+      log.info("Processing proving proof submission")
 
       // Get cluster uuid from cluster_id
       const cluster = await db.query.clusters.findFirst({
@@ -52,10 +50,7 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
       })
 
       if (!cluster) {
-        logger.error("Cluster not found", undefined, {
-          cluster_id,
-          team_id: teamId,
-        })
+        log.error("Cluster not found")
         return new Response("Cluster not found", { status: 404 })
       }
 
@@ -71,24 +66,17 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
       })
 
       if (!clusterVersion) {
-        logger.error("Cluster version not found", undefined, {
-          cluster_id,
-          team_id: teamId,
-        })
+        log.error("Cluster version not found")
         return new Response("Cluster version not found", { status: 404 })
       }
 
       try {
         const block = await findOrCreateBlock(block_number)
-        logger.info("Block found/created for proving proof", {
+        log.info("Block found/created for proving proof", {
           block_number: block,
-          team_id: teamId,
         })
       } catch (error) {
-        logger.error("Failed to find/create block", error, {
-          block_number,
-          team_id: teamId,
-        })
+        log.error("Failed to find/create block", error)
         return new Response("Internal server error", {
           status: 500,
         })
@@ -121,18 +109,13 @@ export const POST = withAuth(async ({ request, user, timestamp }) => {
         revalidateTag(`cluster-${cluster.id}`)
         revalidateTag(`block-${block_number}`)
 
-        logger.info("Proving proof stored successfully", {
+        log.info("Proving proof stored successfully", {
           proof_id: proof.proof_id,
-          block_number,
-          team_id: teamId,
         })
 
         return Response.json(proof)
       } catch (error) {
-        logger.error("Failed to store proving proof", error, {
-          block_number,
-          team_id: teamId,
-        })
+        log.error("Failed to store proving proof", error)
         return new Response("Internal server error", {
           status: 500,
         })

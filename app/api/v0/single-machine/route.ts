@@ -45,15 +45,16 @@ export const POST = withAuth(async ({ request, user }) => {
     machine,
   } = singleMachinePayload
 
+  const log = logger.child({
+    team_id: user.id,
+    nickname,
+    cloud_instance: cloud_instance_name,
+  })
+
   return traced(
     "POST /api/v0/single-machine",
     async () => {
-      logger.info("Registering single machine", {
-        team_id: user.id,
-        nickname,
-        cloud_instance: cloud_instance_name,
-        zkvm_version_id,
-      })
+      log.info("Registering single machine", { zkvm_version_id })
 
       // get & validate cloud instance id
       const cloudInstance = await db.query.cloudInstances.findFirst({
@@ -66,10 +67,7 @@ export const POST = withAuth(async ({ request, user }) => {
       })
 
       if (!cloudInstance) {
-        logger.error("Cloud instance not found", undefined, {
-          cloud_instance_name,
-          team_id: user.id,
-        })
+        log.error("Cloud instance not found")
         return new Response("Cloud instance not found", { status: 400 })
       }
 
@@ -77,10 +75,7 @@ export const POST = withAuth(async ({ request, user }) => {
       const zkvmVersion = await getZkvmVersion(zkvm_version_id)
 
       if (!zkvmVersion) {
-        logger.error("Invalid zkvm version", undefined, {
-          zkvm_version_id,
-          team_id: user.id,
-        })
+        log.error("Invalid zkvm version", { zkvm_version_id })
         return new Response("Invalid zkvm version", { status: 400 })
       }
 
@@ -129,10 +124,8 @@ export const POST = withAuth(async ({ request, user }) => {
         clusterIndex = cluster.index
       })
 
-      logger.info("Single machine registered successfully", {
+      log.info("Single machine registered successfully", {
         cluster_id: clusterIndex,
-        team_id: user.id,
-        nickname,
       })
 
       return Response.json({ id: clusterIndex })
