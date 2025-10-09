@@ -1,3 +1,5 @@
+import { logger } from "../logger"
+
 import { PROOF_BINARY_BUCKET } from "@/lib/constants"
 
 import { createClient } from "@/utils/supabase/server"
@@ -16,11 +18,17 @@ export const uploadProofBinary = async (
     })
 
   if (error) {
-    console.error("error uploading proof binary", error)
+    logger.error("Failed to upload proof binary", error, {
+      filename,
+      size_bytes: binaryBuffer.byteLength,
+    })
     throw error
-  } else {
-    console.log("proof binary uploaded", data)
   }
+
+  logger.debug("Proof binary uploaded", {
+    filename,
+    size_bytes: binaryBuffer.byteLength,
+  })
 }
 
 export const getProofBinary = async (filename: string) => {
@@ -41,11 +49,14 @@ export const downloadProofBinary = async (filename: string) => {
     .download(filename)
 
   if (error) {
-    console.error(`Error downloading ${filename}:`, error)
+    logger.error("Failed to download proof binary", error, { filename })
     return null
   }
 
-  console.log("downloaded proof binary", data)
+  logger.debug("Proof binary downloaded", {
+    filename,
+    size_bytes: data.size,
+  })
 
   return data
 }

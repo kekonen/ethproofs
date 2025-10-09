@@ -1,5 +1,7 @@
 import type { NextRequest } from "next/server"
 
+import { logger } from "@/lib/logger"
+
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants"
 
 import { fetchBlocksPaginated, type MachineType } from "@/lib/api/blocks"
@@ -30,7 +32,11 @@ export async function GET(request: NextRequest) {
 
     return Response.json(blocks)
   } catch (error) {
-    console.error("Error fetching blocks", error)
+    logger.error("Failed to fetch blocks", error, {
+      page_index: pageIndex,
+      page_size: pageSize,
+      machine_type: machineType,
+    })
     return new Response("Internal server error", { status: 500 })
   }
 }
