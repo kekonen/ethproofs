@@ -14,9 +14,17 @@ export async function register() {
     const { OTLPMetricExporter } = await import(
       "@opentelemetry/exporter-metrics-otlp-grpc"
     )
+    const { OTLPLogExporter } = await import(
+      "@opentelemetry/exporter-logs-otlp-grpc"
+    )
     const { PeriodicExportingMetricReader } = await import(
       "@opentelemetry/sdk-metrics"
     )
+    const {
+      LoggerProvider,
+      BatchLogRecordProcessor,
+    } = await import("@opentelemetry/sdk-logs")
+    const { logs } = await import("@opentelemetry/api-logs")
 
     const serviceName = process.env.OTEL_SERVICE_NAME || "ethproofs-api"
     const serviceVersion = process.env.npm_package_version || "0.2.0"
@@ -33,6 +41,19 @@ export async function register() {
     const headers = process.env.OTEL_EXPORTER_OTLP_HEADERS
       ? JSON.parse(process.env.OTEL_EXPORTER_OTLP_HEADERS)
       : {}
+
+    // Initialize Logs Provider
+    const loggerProvider = new LoggerProvider({
+      processors: [
+        new BatchLogRecordProcessor(
+          new OTLPLogExporter({
+            url: otlpEndpoint,
+            headers,
+          })
+        ),
+      ],
+    })
+    logs.setGlobalLoggerProvider(loggerProvider)
 
     const sdk = new NodeSDK({
       serviceName,
@@ -67,11 +88,14 @@ export async function register() {
       )
       console.log(`  - Traces:  exporting to ${otlpEndpoint}`)
       console.log(`  - Metrics: exporting to ${otlpEndpoint} (every 60s)`)
+      console.log(`  - Logs:    exporting to ${otlpEndpoint}`)
 
       // Graceful shutdown
       process.on("SIGTERM", () => {
-        sdk
-          .shutdown()
+        Promise.all([
+          sdk.shutdown(),
+          loggerProvider.shutdown(),
+        ])
           .then(() => console.log("[OpenTelemetry] Observability terminated"))
           .catch((error) =>
             console.error("[OpenTelemetry] Error terminating observability", error)

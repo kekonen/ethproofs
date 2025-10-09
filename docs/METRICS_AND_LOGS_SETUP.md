@@ -6,7 +6,7 @@ The application now exports **three signals** via OTLP gRPC:
 
 1. **Traces** - Request flows, spans, distributed tracing
 2. **Metrics** - Performance counters, request rates, latency percentiles
-3. **Logs** - Structured JSON logs with trace correlation (via dd-agent collection)
+3. **Logs** - Structured logs with trace correlation (via OTLP export)
 
 ## How It Works
 
@@ -25,10 +25,12 @@ The application now exports **three signals** via OTLP gRPC:
   - And more from auto-instrumentation
 
 ### Logs
-- Written to console as structured JSON
-- Include `trace_id` and `span_id` for correlation
-- Collected by dd-agent from container stdout
-- Automatically correlated with traces in DataDog
+- Emitted via OpenTelemetry Logs API using `logger.info()`, `logger.error()`, etc.
+- Sent directly via OTLP gRPC to port 4317 (same as traces and metrics)
+- Batched and exported automatically by `BatchLogRecordProcessor`
+- Include `trace_id` and `span_id` for automatic correlation with traces
+- Also written to console for local development visibility
+- Automatically correlated with traces in DataDog - click a log to see its trace, and vice versa
 
 ## Configuration
 
@@ -58,10 +60,12 @@ OTEL_EXPORTER_OTLP_HEADERS={}
 - Throughput alerts (`requests/min < 1`)
 - Error rate calculations (`errors / total requests`)
 
-### Logs (once dd-agent log collection is configured)
-- JSON structured logs with all context
-- Linked to traces via `trace_id`
-- Searchable by any field (`@team_id`, `@block_number`, etc.)
+### Logs
+- Structured logs with all context (team_id, block_number, etc.)
+- Automatically linked to traces via `trace_id`
+- Searchable by any field in DataDog Logs Explorer
+- Click a log → jump to its trace
+- Click a trace → see all related logs
 
 ## Using Metrics in Monitors
 
@@ -125,9 +129,9 @@ This will automatically export to DataDog via the configured OTLP exporter.
 - Verify `http.server.*` metrics in DataDog Metrics Explorer
 
 **Logs not correlated with traces:**
-- Configure dd-agent to collect container logs
-- Ensure JSON parsing is enabled
-- Check that `trace_id` field is present in logs
+- Check that logs are being exported (should see in dd-agent logs)
+- Verify `trace_id` is present in log attributes
+- Check DataDog Logs Explorer for service:ethproofs-api
 
 **High cardinality warning:**
 - Don't add high-cardinality labels to metrics (like `block_number`)

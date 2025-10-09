@@ -1,4 +1,5 @@
 import { context, SpanStatusCode, trace } from "@opentelemetry/api"
+import { logs, SeverityNumber } from "@opentelemetry/api-logs"
 
 type LogLevel = "debug" | "info" | "warn" | "error"
 
@@ -6,13 +7,29 @@ interface LogContext {
   [key: string]: unknown
 }
 
+const severityMap: Record<LogLevel, SeverityNumber> = {
+  debug: SeverityNumber.DEBUG,
+  info: SeverityNumber.INFO,
+  warn: SeverityNumber.WARN,
+  error: SeverityNumber.ERROR,
+}
+
 class Logger {
   private serviceName: string
   private baseContext: LogContext
+  private otelLogger: ReturnType<ReturnType<typeof logs.getLoggerProvider>["getLogger"]> | null = null
 
   constructor(serviceName: string = "ethproofs", baseContext: LogContext = {}) {
     this.serviceName = serviceName
     this.baseContext = baseContext
+
+    // Get OTel logger if available (after instrumentation is initialized)
+    try {
+      this.otelLogger = logs.getLoggerProvider().getLogger(serviceName)
+    } catch (e) {
+      // OTel not initialized yet, will fall back to console only
+      this.otelLogger = null
+    }
   }
 
   private getTraceContext() {
@@ -44,7 +61,17 @@ class Logger {
       ...logContext,
     }
 
-    // Output to console (logs will be collected by dd-agent or sent via separate log exporter)
+    // Send to OpenTelemetry if available
+    if (this.otelLogger) {
+      this.otelLogger.emit({
+        severityNumber: severityMap[level],
+        severityText: level.toUpperCase(),
+        body: message,
+        attributes: logContext as Record<string, string | number | boolean | (string | number | boolean)[]>,
+      })
+    }
+
+    // Also output to console for local development visibility
     const logString = JSON.stringify(logEntry)
     if (level === "error") {
       console.error(logString)
