@@ -6,8 +6,10 @@ export async function register() {
     const { getNodeAutoInstrumentations } = await import(
       "@opentelemetry/auto-instrumentations-node"
     )
+    // Use eiter @opentelemetry/exporter-trace-otlp-grpc or @opentelemetry/exporter-trace-otlp-http, configure
+    // exporter URL accordingly. 4317 is default for gRPC, 4318 is for HTTP
     const { OTLPTraceExporter } = await import(
-      "@opentelemetry/exporter-trace-otlp-http"
+      "@opentelemetry/exporter-trace-otlp-grpc"
     )
 
 
